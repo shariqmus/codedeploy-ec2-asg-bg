@@ -1,0 +1,16 @@
+# Docs: http://docs.aws.amazon.com/codedeploy/latest/userguide/app-spec-ref.html
+version: 0.0
+os: linux
+hooks:
+  BeforeInstall:
+    - location: scripts/sleep10.sh
+      timeout: 120
+  ApplicationStart:
+    - location: scripts/sleep20.sh
+      timeout: 120
+  ValidateService:
+    - location: scripts/sleep30.sh
+      timeout: 120
+  AfterAllowTraffic:
+    - location: scripts/BGTG.sh
+      timeout: 180
