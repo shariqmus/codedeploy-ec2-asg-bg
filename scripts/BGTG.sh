@@ -117,3 +117,16 @@ echo $asg
 
 $AWS_CLI autoscaling attach-load-balancer-target-groups --auto-scaling-group-name $asg --target-group-arns $Targe_Group_ARN
 
+sudo yum install jq -y
+
+UP=$(aws autoscaling put-scaling-policy --auto-scaling-group-name $asg --policy-name scale-up --scaling-adjustment 1 --adjustment-type ChangeInCapacity --cooldown 300 | jq -r '.PolicyARN')
+
+DOWN=$(aws autoscaling put-scaling-policy --auto-scaling-group-name $asg --policy-name scale-down --scaling-adjustment -1 --adjustment-type ChangeInCapacity --cooldown 600 | jq -r '.PolicyARN')
+
+aws cloudwatch put-metric-alarm --alarm-name $asg-CPUHigh --metric-name CPUUtilization --namespace "AWS/EC2" --period 300 --evaluation-periods 1 --threshold 70 --statistic Average --comparison-operator GreaterThanThreshold --alarm-actions $UP --dimensions Name=AutoScalingGroupName,Value=$asg
+
+aws cloudwatch put-metric-alarm --alarm-name $asg-CPULow --metric-name CPUUtilization --namespace "AWS/EC2" --period 300 --evaluation-periods 1 --threshold 20 --statistic Average  --comparison-operator LessThanThreshold --alarm-actions $DOWN --dimensions Name=AutoScalingGroupName,Value=$asg
+
+# Enable AS group (not instance) metrics in CloudWatch
+aws autoscaling enable-metrics-collection --auto-scaling-group-name $asg --granularity 1Minute --metrics GroupInServiceInstances GroupTotalInstances
+
