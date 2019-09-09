@@ -1,1 +1,2 @@
-asd
+#!/bin/bash
+sleep 10
