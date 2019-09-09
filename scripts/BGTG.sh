@@ -115,7 +115,7 @@ echo $asg
 
 #Attaching the ALB TG to the new(Green) ASG created by Codedeploy.
 
-$AWS_CLI autoscaling attach-load-balancer-target-groups --auto-scaling-group-name $asg --target-group-arns $Targe_Group_ARN
+#$AWS_CLI autoscaling attach-load-balancer-target-groups --auto-scaling-group-name $asg --target-group-arns $Targe_Group_ARN
 
 sudo yum install jq -y
 
@@ -127,6 +127,4 @@ aws cloudwatch put-metric-alarm --alarm-name $asg-CPUHigh --metric-name CPUUtili
 
 aws cloudwatch put-metric-alarm --alarm-name $asg-CPULow --metric-name CPUUtilization --namespace "AWS/EC2" --period 300 --evaluation-periods 1 --threshold 20 --statistic Average  --comparison-operator LessThanThreshold --alarm-actions $DOWN --dimensions Name=AutoScalingGroupName,Value=$asg
 
-# Enable AS group (not instance) metrics in CloudWatch
 aws autoscaling enable-metrics-collection --auto-scaling-group-name $asg --granularity 1Minute --metrics GroupInServiceInstances GroupTotalInstances
-
