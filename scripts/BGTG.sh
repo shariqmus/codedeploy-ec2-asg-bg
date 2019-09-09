@@ -110,21 +110,19 @@ autoscaling_group_name() {
 }
 
 asg=$(autoscaling_group_name $INSTANCE_ID)
-
-echo $asg
+region=$(get_instance_region)
 
 #Attaching the ALB TG to the new(Green) ASG created by Codedeploy.
-
 #$AWS_CLI autoscaling attach-load-balancer-target-groups --auto-scaling-group-name $asg --target-group-arns $Targe_Group_ARN
 
 sudo yum install jq -y
 
-UP=$(aws autoscaling put-scaling-policy --auto-scaling-group-name $asg --policy-name scale-up --scaling-adjustment 1 --adjustment-type ChangeInCapacity --cooldown 300 | jq -r '.PolicyARN')
+UP=$(aws autoscaling put-scaling-policy --region $region --auto-scaling-group-name $asg --policy-name scale-up --scaling-adjustment 1 --adjustment-type ChangeInCapacity --cooldown 300 | jq -r '.PolicyARN')
 
-DOWN=$(aws autoscaling put-scaling-policy --auto-scaling-group-name $asg --policy-name scale-down --scaling-adjustment -1 --adjustment-type ChangeInCapacity --cooldown 600 | jq -r '.PolicyARN')
+DOWN=$(aws autoscaling put-scaling-policy --region $region --auto-scaling-group-name $asg --policy-name scale-down --scaling-adjustment -1 --adjustment-type ChangeInCapacity --cooldown 600 | jq -r '.PolicyARN')
 
-aws cloudwatch put-metric-alarm --alarm-name $asg-CPUHigh --metric-name CPUUtilization --namespace "AWS/EC2" --period 300 --evaluation-periods 1 --threshold 70 --statistic Average --comparison-operator GreaterThanThreshold --alarm-actions $UP --dimensions Name=AutoScalingGroupName,Value=$asg
+aws cloudwatch put-metric-alarm --region $region --alarm-name $asg-CPUHigh --metric-name CPUUtilization --namespace "AWS/EC2" --period 300 --evaluation-periods 1 --threshold 70 --statistic Average --comparison-operator GreaterThanThreshold --alarm-actions $UP --dimensions Name=AutoScalingGroupName,Value=$asg
 
-aws cloudwatch put-metric-alarm --alarm-name $asg-CPULow --metric-name CPUUtilization --namespace "AWS/EC2" --period 300 --evaluation-periods 1 --threshold 20 --statistic Average  --comparison-operator LessThanThreshold --alarm-actions $DOWN --dimensions Name=AutoScalingGroupName,Value=$asg
+aws cloudwatch put-metric-alarm --region $region --alarm-name $asg-CPULow --metric-name CPUUtilization --namespace "AWS/EC2" --period 300 --evaluation-periods 1 --threshold 20 --statistic Average  --comparison-operator LessThanThreshold --alarm-actions $DOWN --dimensions Name=AutoScalingGroupName,Value=$asg
 
-aws autoscaling enable-metrics-collection --auto-scaling-group-name $asg --granularity 1Minute --metrics GroupInServiceInstances GroupTotalInstances
+aws autoscaling enable-metrics-collection --region $region --auto-scaling-group-name $asg --granularity 1Minute --metrics GroupInServiceInstances GroupTotalInstances
